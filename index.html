@@ -1,605 +1,192 @@
-<!DOCTYPE html> <html lang="en"> <head>
-  <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>Falling Keys 
-  Practice</title> <style>
-    :root {
-      --bg: #111; --panel: #181818; --panel-2: #202020; --text: #f4f4f4; --muted: #9b9b9b; --line: #333; --orange: #ff6a00; 
-      --orange-dim: rgba(255, 106, 0, 0.16); --good: #7cff9b; --bad: #ff5f5f; --warn: #ffd166; --lp: #7aa2ff; --lr: #b58cff; 
-      --lm: #63d4ff; --li: #7cff9b; --ri: #ffd166; --rm: #ff9f6e; --rr: #ff7aae; --rp: #ff5f5f;
-    } * { box-sizing: border-box; } body {
-      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, 
-      Menlo, Monaco, Consolas, "Liberation Mono", monospace; overflow: hidden;
-    } .app {
-      height: 100vh; display: grid; grid-template-rows: auto 1fr auto;
-    } header {
-      min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 18px; 
-      border-bottom: 1px solid var(--line); background: #141414;
-    } .brand {
-      display: flex; align-items: center; gap: 12px; min-width: 240px;
-    } .logo {
-      width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--orange); color: var(--orange); 
-      background: var(--orange-dim); font-weight: 900;
-    } h1 {
-      margin: 0; font-size: 15px; letter-spacing: 0.04em; font-weight: 700;
-    } .sub {
-      color: var(--muted); font-size: 11px; margin-top: 3px;
-    } .stats {
-      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
-    } .stat {
-      min-width: 82px; padding: 7px 10px; border: 1px solid var(--line); background: var(--panel); text-align: center;
-    } .stat .label {
-      color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
-    } .stat .value {
-      margin-top: 2px; font-size: 16px; color: var(--text); font-weight: 800;
-    } main {
-      display: grid; grid-template-columns: 250px 1fr 250px; min-height: 0;
-    } aside {
-      border-right: 1px solid var(--line); background: #131313; padding: 14px; overflow: auto;
-    } aside.right {
-      border-right: 0; border-left: 1px solid var(--line);
-    } .box {
-      border: 1px solid var(--line); background: var(--panel); padding: 12px; margin-bottom: 12px;
-    } .box-title {
-      color: var(--orange); font-size: 12px; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 
-      0.08em;
-    } .small {
-      color: var(--muted); font-size: 12px; line-height: 1.55;
-    } .shortcut-grid {
-      display: grid; gap: 6px; font-size: 12px; color: var(--muted);
-    } .shortcut-row {
-      display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed #2d2d2d; padding-bottom: 5px;
-    } .shortcut-row kbd {
-      min-width: 34px; text-align: center; padding: 2px 6px; border: 1px solid var(--line); background: #222; color: 
-      var(--text); border-radius: 4px; font: inherit; font-size: 11px;
-    } button, select, input[type="checkbox"] {
-      font: inherit;
-    } button, select {
-      width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); padding: 10px; cursor: 
-      pointer; margin-top: 8px;
-    } button:hover, select:hover {
-      border-color: var(--orange);
-    } button.primary {
-      background: var(--orange); color: #111; border-color: var(--orange); font-weight: 900;
-    } button.focus-btn {
-      background: #191919; border-color: var(--orange); color: var(--orange); font-weight: 900;
-    } .check {
-      display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 12px; margin-top: 10px; line-height: 
-      1.4; cursor: pointer;
-    } .check input {
-      margin-top: 1px; accent-color: var(--orange);
-    } .stage-wrap {
-      min-width: 0; min-height: 0; position: relative; background:
-        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, 
-        transparent 1px);
-      background-size: 48px 48px;
-    } #stage {
-      position: relative; height: 100%; overflow: hidden;
-    } .ground {
-      position: absolute; left: 0; right: 0; bottom: 0; height: 78px; background: linear-gradient(180deg, transparent, 
-      rgba(255,106,0,0.12)); border-top: 1px solid rgba(255,106,0,0.5); pointer-events: none;
-    } .falling-key {
-      position: absolute; width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid var(--orange); 
-      background: #1b1b1b; color: var(--text); font-size: 27px; font-weight: 900; box-shadow: 0 0 0 4px rgba(255,106,0,0.08); 
-      user-select: none;
-    } .falling-key.hard {
-      border-color: var(--warn); box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.13);
-    } .falling-key.hit {
-      animation: hit 160ms ease-out forwards;
-    } .falling-key.miss {
-      border-color: var(--bad); color: var(--bad); animation: miss 220ms ease-out forwards;
-    } @keyframes hit {
-      to {
-        transform: scale(1.7); opacity: 0; color: var(--good); border-color: var(--good);
-      }
-    } @keyframes miss {
-      to {
-        transform: translateY(14px) scale(0.85); opacity: 0;
-      }
-    } .center-message {
-      position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 4;
-    } .message-card {
-      width: min(560px, 90%); border: 1px solid var(--line); background: rgba(18,18,18,0.94); padding: 24px; text-align: 
-      center; box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-    } .message-card strong {
-      display: block; font-size: 22px; color: var(--orange); margin-bottom: 8px;
-    } .keyboard {
-      display: grid; gap: 8px; width: max-content; max-width: 100%; margin: 0 auto;
-    } .row {
-      display: flex; gap: 7px; justify-content: flex-start;
-    } .row.r1 { margin-left: 0; } .row.r2 { margin-left: 24px; } .row.r3 { margin-left: 70px; } .row.r4 { margin-left: 128px; 
-    } .k {
-      min-width: 46px; height: 40px; padding: 0 7px; display: grid; place-items: center; border: 1px solid var(--line); 
-      background: #222; color: #f1f1f1; font-size: 14px; font-weight: 800; position: relative; border-radius: 4px; 
-      transition: transform 100ms ease, opacity 100ms ease, outline 100ms ease;
-    } .k::after {
-      content: attr(data-finger-short); position: absolute; right: 4px; bottom: 2px; font-size: 8px; color: 
-      rgba(255,255,255,0.72); font-weight: 700;
-    } .k.lp { border-color: var(--lp); background: color-mix(in srgb, var(--lp) 18%, #202020); } .k.lr { border-color: 
-    var(--lr); background: color-mix(in srgb, var(--lr) 18%, #202020); } .k.lm { border-color: var(--lm); background: 
-    color-mix(in srgb, var(--lm) 18%, #202020); } .k.li { border-color: var(--li); background: color-mix(in srgb, var(--li) 
-    18%, #202020); } .k.ri { border-color: var(--ri); background: color-mix(in srgb, var(--ri) 18%, #202020); } .k.rm { 
-    border-color: var(--rm); background: color-mix(in srgb, var(--rm) 18%, #202020); } .k.rr { border-color: var(--rr); 
-    background: color-mix(in srgb, var(--rr) 18%, #202020); } .k.rp { border-color: var(--rp); background: color-mix(in srgb, 
-    var(--rp) 18%, #202020); } .k.wide {
-      min-width: 310px;
-    } .k.active {
-      outline: 3px solid var(--orange); color: #fff; box-shadow: 0 0 0 5px var(--orange-dim); transform: translateY(-2px); 
-      opacity: 1;
-    } .k.good {
-      outline: 3px solid var(--good);
-    } .k.bad {
-      outline: 3px solid var(--bad);
-    } .finger-map {
-      display: grid; gap: 6px; font-size: 12px;
-    } .finger-line {
-      display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed #2d2d2d; padding-bottom: 5px;
-    } .finger-line span:first-child {
-      color: var(--muted);
-    } .finger-line span:last-child {
-      color: var(--text); text-align: right;
-    } .legend {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;
-    } .legend-item {
-      display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px;
-    } .dot {
-      width: 10px; height: 10px; border: 1px solid currentColor; background: currentColor; opacity: 0.85;
-    } footer {
-      min-height: 166px; border-top: 1px solid var(--line); background: #141414; padding: 12px 18px;
-    } .footer-grid {
-      display: grid; grid-template-columns: 1fr 290px; gap: 14px; align-items: start;
-    } .hint {
-      color: var(--muted); font-size: 12px; line-height: 1.5;
-    } .current {
-      font-size: 12px; color: var(--muted); margin-bottom: 8px;
-    } .current b {
-      color: var(--orange);
-    } .toast {
-      position: absolute; top: 78px; left: 50%; transform: translateX(-50%); padding: 8px 12px; border: 1px solid 
-      var(--line); background: #181818; color: var(--text); font-size: 12px; z-index: 8; opacity: 0; transition: opacity 
-      120ms ease;
-    } .toast.show {
-      opacity: 1;
-    } .combo {
-      position: absolute; left: 20px; top: 20px; color: var(--orange); font-size: 13px; font-weight: 900; opacity: 0; 
-      transition: opacity 120ms ease;
-    } .combo.show { opacity: 1; } .focus-layer {
-      position: fixed; inset: 0; z-index: 50; background: #101010; display: none; grid-template-rows: auto 1fr auto;
-    } .focus-layer.open {
-      display: grid;
-    } .focus-top {
-      min-height: 64px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: 
-      space-between; gap: 16px; padding: 12px 18px; background: #141414;
-    } .focus-title strong {
-      display: block; color: var(--orange); font-size: 15px; letter-spacing: 0.04em;
-    } .focus-title span {
-      display: block; color: var(--muted); font-size: 12px; margin-top: 3px;
-    } .focus-actions {
-      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
-    } .focus-actions button, .focus-actions select {
-      width: auto; margin-top: 0; min-width: 132px;
-    } .focus-main {
-      display: grid; grid-template-rows: auto 1fr auto; gap: 22px; align-content: center; padding: 28px; overflow: auto;
-    } .focus-callout {
-      text-align: center;
-    } .focus-callout .big-key {
-      font-size: clamp(62px, 9vw, 130px); line-height: 1; color: var(--orange); font-weight: 900; margin-bottom: 10px;
-    } .focus-callout .finger {
-      font-size: clamp(18px, 2vw, 28px); font-weight: 900; color: var(--text);
-    } .focus-callout .instruction {
-      color: var(--muted); font-size: 13px; margin-top: 8px;
-    } .focus-keyboard-wrap {
-      width: 100%; display: grid; place-items: center;
-    } .focus-keyboard {
-      width: min(1180px, 96vw); display: grid; gap: 12px; transition: opacity 120ms ease;
-    } .focus-row {
-      display: flex; gap: 10px;
-    } .focus-row.r1 { padding-left: 0; } .focus-row.r2 { padding-left: 46px; } .focus-row.r3 { padding-left: 132px; } 
-    .focus-row.r4 { padding-left: 260px; } .fk {
-      flex: 1; min-width: 0; height: clamp(54px, 6vw, 76px); display: grid; place-items: center; border: 1px solid 
-      var(--line); border-radius: 8px; background: #202020; color: #eaeaea; font-size: clamp(18px, 2.2vw, 30px); font-weight: 
-      900; position: relative; opacity: 0.22; transform: scale(0.98); transition: opacity 140ms ease, transform 140ms ease, 
-      outline 140ms ease, box-shadow 140ms ease;
-    } .fk::after {
-      content: attr(data-finger-short); position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: 
-      rgba(255,255,255,0.7);
-    } .fk.lp { border-color: var(--lp); background: color-mix(in srgb, var(--lp) 14%, #202020); } .fk.lr { border-color: 
-    var(--lr); background: color-mix(in srgb, var(--lr) 14%, #202020); } .fk.lm { border-color: var(--lm); background: 
-    color-mix(in srgb, var(--lm) 14%, #202020); } .fk.li { border-color: var(--li); background: color-mix(in srgb, var(--li) 
-    14%, #202020); } .fk.ri { border-color: var(--ri); background: color-mix(in srgb, var(--ri) 14%, #202020); } .fk.rm { 
-    border-color: var(--rm); background: color-mix(in srgb, var(--rm) 14%, #202020); } .fk.rr { border-color: var(--rr); 
-    background: color-mix(in srgb, var(--rr) 14%, #202020); } .fk.rp { border-color: var(--rp); background: color-mix(in 
-    srgb, var(--rp) 14%, #202020); } .fk.space {
-      flex: 0 0 48%;
-    } .fk.target {
-      opacity: 1; transform: scale(1.07); outline: 4px solid var(--orange); box-shadow: 0 0 0 8px var(--orange-dim), 0 20px 
-      60px rgba(0,0,0,0.35); z-index: 2;
-    } .fk.same-finger {
-      opacity: 0.5;
-    } .fk.correct {
-      outline: 4px solid var(--good);
-    } .fk.wrong {
-      outline: 4px solid var(--bad);
-    } .focus-bottom {
-      border-top: 1px solid var(--line); background: #141414; padding: 12px 18px; display: flex; align-items: center; 
-      justify-content: space-between; gap: 14px; color: var(--muted); font-size: 12px;
-    } .focus-bottom b {
-      color: var(--text);
-    } @media (max-width: 1080px) {
-      main { grid-template-columns: 1fr; } aside { display: none; } header {
-        height: auto; align-items: flex-start; flex-direction: column; padding: 12px;
-      } .stats { justify-content: flex-start; } footer { min-height: 150px; } .footer-grid { grid-template-columns: 1fr; } 
-      .hint { display: none; } .k { min-width: 32px; height: 34px; font-size: 12px; } .k.wide { min-width: 180px; } 
-      .focus-top {
-        align-items: flex-start; flex-direction: column;
-      } .focus-row {
-        gap: 6px;
-      } .focus-row.r2 { padding-left: 22px; } .focus-row.r3 { padding-left: 56px; } .focus-row.r4 { padding-left: 98px; } .fk 
-      {
-        height: 46px; font-size: 15px; border-radius: 6px;
-      } .fk::after {
-        display: none;
-      } .focus-bottom {
-        flex-direction: column; align-items: flex-start;
-      }
-    }
-  </style> </head> <body> <div class="app">
-    <header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Falling Keys</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- Top bar -->
+    <div class="topbar">
       <div class="brand">
-        <div class="logo">K</div> <div>
-          <h1>Falling Keys</h1> <div class="sub">finger map first · speed later</div>
-        </div>
-      </div> <div class="stats">
-        <div class="stat"><div class="label">score</div><div id="score" class="value">0</div></div> <div class="stat"><div 
-        class="label">best</div><div id="best" class="value">0</div></div> <div class="stat"><div 
-        class="label">streak</div><div id="streak" class="value">0</div></div> <div class="stat"><div 
-        class="label">accuracy</div><div id="accuracy" class="value">100%</div></div> <div class="stat"><div 
-        class="label">level</div><div id="level" class="value">1</div></div> <div class="stat"><div 
-        class="label">miss</div><div id="misses" class="value">0</div></div>
-      </div>
-    </header> <main>
-      <aside>
-        <div class="box">
-          <div class="box-title">Practice</div> <button class="focus-btn" id="openFocusBtn" title="Shortcut: F">Practice 
-          Finger Map</button> <select id="mode">
-            <option value="home">Home row only</option> <option value="letters" selected>Falling letters A-Z</option> <option 
-            value="hard">Hard key drill</option> <option value="code">Coder keys</option> <option value="mixed">Mixed 
-            keys</option>
-          </select> <label class="check">
-            <input type="checkbox" id="adaptive" checked /> <span>Adaptive mode: repeat weak and rare keys more often.</span>
-          </label> <button class="primary" id="startBtn">Start Falling Game</button> <button id="pauseBtn">Pause</button> 
-          <button id="resetBtn">Reset run</button> <button id="clearStorageBtn">Clear saved stats</button>
-        </div> <div class="box">
-          <div class="box-title">Today</div> <div class="small" id="todayStats">No saved practice yet.</div>
-        </div> <div class="box">
-          <div class="box-title">Best order</div> <div class="small">
-            1. Practice Finger Map<br> 2. Home row only<br> 3. Falling letters<br> 4. Hard key drill<br> 5. Coder keys
-          </div>
-        </div> <div class="box">
-          <div class="box-title">Shortcuts</div> <div class="shortcut-grid">
-            <div class="shortcut-row"><span>Open finger map</span><kbd>F</kbd></div> <div class="shortcut-row"><span>Start / 
-            pause game</span><kbd>Space</kbd></div> <div class="shortcut-row"><span>Reset run</span><kbd>R</kbd></div> <div 
-            class="shortcut-row"><span>Close focus</span><kbd>Esc</kbd></div>
-          </div>
-        </div>
-      </aside> <section class="stage-wrap">
-        <div id="stage">
-          <div class="toast" id="toast"></div> <div class="combo" id="combo"></div> <div class="center-message" 
-          id="centerMessage">
-            <div class="message-card">
-              <strong>Start with Practice Finger Map</strong> <div class="small">
-                It opens a full-width faded keyboard. One random key lights up. You see where it lives, which finger owns it, 
-                press it, then return home.
-              </div>
-            </div>
-          </div> <div class="ground"></div>
-        </div>
-      </section> <aside class="right">
-        <div class="box">
-          <div class="box-title">Finger hint</div> <div class="current">Current key: <b id="currentKey">-</b></div> <div 
-          class="finger-map" id="fingerHint"></div>
-        </div> <div class="box">
-          <div class="box-title">Weak keys</div> <div class="small" id="weakKeys">No mistakes yet.</div>
-        </div> <div class="box">
-          <div class="box-title">Why focus mode?</div> <div class="small">
-            Falling mode trains reaction. Focus mode trains the actual keyboard map. For habit breaking, map-first is more 
-            important.
-          </div>
-        </div>
-      </aside>
-    </main> <footer>
-      <div class="footer-grid">
+        <div class="logo">K</div>
         <div>
-          <div class="current">Keyboard map · colors show responsible finger · orange outline shows current target</div> <div 
-          class="keyboard" id="keyboard"></div>
-        </div> <div class="hint">
-          <b>Finger colors</b> <div class="legend" id="legend"></div> <br> Keep index fingers on <b>F</b> and <b>J</b>. After 
-          every press, return to home row.
+          <h1>Falling Keys</h1>
+          <p class="sub">map first · speed later</p>
         </div>
       </div>
-    </footer>
-  </div> <section class="focus-layer" id="focusLayer">
-    <div class="focus-top">
-      <div class="focus-title">
-        <strong>Practice Finger Map</strong> <span>No falling. No rush. See key → know finger → press → return home. Enter 
-        skips, 1-6 changes drill.</span>
-      </div> <div class="focus-actions">
-        <select id="focusMode">
-          <option value="home">Home row</option> <option value="letters" selected>All letters</option> <option 
-          value="hard">Hard keys</option> <option value="left">Left hand</option> <option value="right">Right hand</option> 
-          <option value="code">Coder keys</option>
-        </select> <button id="focusNextBtn" title="Shortcut: Enter">Skip Key</button> <button id="closeFocusBtn" 
-        title="Shortcut: Esc">Close</button>
-      </div>
-    </div> <div class="focus-main">
-      <div class="focus-callout">
-        <div class="big-key" id="focusBigKey">a</div> <div class="finger" id="focusFinger">Left pinky</div> <div 
-        class="instruction" id="focusInstruction">Find the highlighted key. Press slowly. Return to home row.</div>
-      </div> <div class="focus-keyboard-wrap">
-        <div class="focus-keyboard" id="focusKeyboard"></div>
-      </div>
-    </div> <div class="focus-bottom">
-      <div>
-        Streak: <b id="focusStreak">0</b> · Correct: <b id="focusCorrect">0</b> · Wrong: <b id="focusWrong">0</b>
-      </div> <div>
-        Focus shortcuts: <b>Enter</b> skip · <b>1-6</b> change drill · <b>Esc</b> close
+      <div class="tb-actions">
+        <button class="tb-btn" id="leftToggle" title="Toggle controls panel">☰</button>
+        <button class="tb-btn" id="themeToggle" title="Cycle themes">⛩ Japan</button>
+        <button class="tb-btn" id="rightToggle" title="Toggle stats panel">◫</button>
       </div>
     </div>
-  </section> <script>
-    const stage = document.getElementById("stage"); const centerMessage = document.getElementById("centerMessage"); const 
-    startBtn = document.getElementById("startBtn"); const pauseBtn = document.getElementById("pauseBtn"); const resetBtn = 
-    document.getElementById("resetBtn"); const clearStorageBtn = document.getElementById("clearStorageBtn"); const modeSelect 
-    = document.getElementById("mode"); const adaptiveEl = document.getElementById("adaptive"); const toast = 
-    document.getElementById("toast"); const comboEl = document.getElementById("combo"); const scoreEl = 
-    document.getElementById("score"); const bestEl = document.getElementById("best"); const streakEl = 
-    document.getElementById("streak"); const accuracyEl = document.getElementById("accuracy"); const levelEl = 
-    document.getElementById("level"); const missesEl = document.getElementById("misses"); const currentKeyEl = 
-    document.getElementById("currentKey"); const fingerHintEl = document.getElementById("fingerHint"); const weakKeysEl = 
-    document.getElementById("weakKeys"); const keyboardEl = document.getElementById("keyboard"); const legendEl = 
-    document.getElementById("legend"); const todayStatsEl = document.getElementById("todayStats"); const openFocusBtn = 
-    document.getElementById("openFocusBtn"); const closeFocusBtn = document.getElementById("closeFocusBtn"); const focusLayer 
-    = document.getElementById("focusLayer"); const focusKeyboardEl = document.getElementById("focusKeyboard"); const 
-    focusBigKeyEl = document.getElementById("focusBigKey"); const focusFingerEl = document.getElementById("focusFinger"); 
-    const focusInstructionEl = document.getElementById("focusInstruction"); const focusModeEl = 
-    document.getElementById("focusMode"); const focusNextBtn = document.getElementById("focusNextBtn"); const focusStreakEl = 
-    document.getElementById("focusStreak"); const focusCorrectEl = document.getElementById("focusCorrect"); const 
-    focusWrongEl = document.getElementById("focusWrong"); const STORAGE_KEY = "fallingKeysPractice.v3"; const MODES = {
-      home: "asdfjkl;", letters: "abcdefghijklmnopqrstuvwxyz", hard: "pmqwzxybvjgk", left: "qwertasdfgzxcvb", right: 
-      "yuiophjkl;nm,./", code: "abcdefghijklmnopqrstuvwxyz{}[]()<>;:=+-_*/'\".,", mixed: 
-      "abcdefghijklmnopqrstuvwxyz0123456789{}[]()<>;:=+-_*/'\".,?!@#$%"
-    }; const HARD_KEYS = "pmqwzxyb"; const FINGER = {
-      LP: { name: "Left pinky", short: "LP", cls: "lp", color: "var(--lp)" }, LR: { name: "Left ring", short: "LR", cls: 
-      "lr", color: "var(--lr)" }, LM: { name: "Left middle", short: "LM", cls: "lm", color: "var(--lm)" }, LI: { name: "Left 
-      index", short: "LI", cls: "li", color: "var(--li)" }, RI: { name: "Right index", short: "RI", cls: "ri", color: 
-      "var(--ri)" }, RM: { name: "Right middle", short: "RM", cls: "rm", color: "var(--rm)" }, RR: { name: "Right ring", 
-      short: "RR", cls: "rr", color: "var(--rr)" }, RP: { name: "Right pinky", short: "RP", cls: "rp", color: "var(--rp)" }
-    }; const KEY_FINGER = {
-      "`": "LP", "1": "LP", "q": "LP", "a": "LP", "z": "LP", "2": "LR", "w": "LR", "s": "LR", "x": "LR", "3": "LM", "e": 
-      "LM", "d": "LM", "c": "LM", "4": "LI", "5": "LI", "r": "LI", "t": "LI", "f": "LI", "g": "LI", "v": "LI", "b": "LI", 
-      "6": "RI", "7": "RI", "y": "RI", "u": "RI", "h": "RI", "j": "RI", "n": "RI", "m": "RI", "8": "RM", "i": "RM", "k": 
-      "RM", ",": "RM", "<": "RM", "*": "RM", "9": "RR", "o": "RR", "l": "RR", ".": "RR", ">": "RR", "0": "RP", "p": "RP", 
-      ";": "RP", ":": "RP", "/": "RP", "?": "RP", "-": "RP", "_": "RP", "=": "RP", "+": "RP", "[": "RP", "]": "RP", "{": 
-      "RP", "}": "RP", "'": "RP", "\"": "RP", "\\": "RP", "|": "RP", "(": "RP", ")": "RP", "!": "LP", "@": "LR", "#": "LM", 
-      "$": "LI", "%": "LI"
-    }; const rows = [
-      ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l",";"], 
-      ["z","x","c","v","b","n","m",",",".","/"], ["space"]
-    ]; let store = loadStore(); let running = false; let paused = false; let keys = []; let lastSpawn = 0; let spawnEvery = 
-    1450; let speed = 1.15; let score = 0; let streak = 0; let hits = 0; let wrong = 0; let misses = 0; let level = 1; let 
-    raf = null; let weak = {}; let lastTime = performance.now(); let focusOpen = false; let focusCurrent = ""; let 
-    focusStreak = 0; let focusCorrect = 0; let focusWrong = 0; function todayKey() {
-      return new Date().toISOString().slice(0, 10);
-    } function defaultStore() {
-      return {
-        bestScore: 0, totalHits: 0, totalWrong: 0, totalMisses: 0, weakKeys: {}, perKeyHits: {}, settings: {
-          mode: "letters", adaptive: true, focusMode: "letters"
-        }, days: {}
-      };
-    } function loadStore() {
-      try {
-        return Object.assign(defaultStore(), JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"));
-      } catch {
-        return defaultStore();
-      }
-    } function saveStore() {
-      store.settings.mode = modeSelect.value; store.settings.adaptive = adaptiveEl.checked; store.settings.focusMode = 
-      focusModeEl.value; localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-    } function savePracticeEvent(type, key) {
-      const day = todayKey(); store.days[day] ||= { hits: 0, wrong: 0, misses: 0, score: 0 }; if (type === "hit") {
-        store.totalHits++; store.perKeyHits[key] = (store.perKeyHits[key] || 0) + 1; store.days[day].hits++;
-      } if (type === "wrong") {
-        store.totalWrong++; store.weakKeys[key] = (store.weakKeys[key] || 0) + 1; store.days[day].wrong++;
-      } if (type === "miss") {
-        store.totalMisses++; store.weakKeys[key] = (store.weakKeys[key] || 0) + 1; store.days[day].misses++;
-      } store.bestScore = Math.max(store.bestScore || 0, score); store.days[day].score = Math.max(store.days[day].score || 0, 
-      score); saveStore(); renderToday();
-    } function normalizeKey(k) {
-      if (k === " ") return "space"; return k.length === 1 ? k.toLowerCase() : k;
-    } function weightedRandom(chars) {
-      const adaptive = adaptiveEl.checked; const pool = []; for (const ch of chars) {
-        let weight = 4; if (HARD_KEYS.includes(ch)) weight += 8; if (adaptive) {
-          weight += Math.min(16, (store.weakKeys[ch] || 0) * 2); weight += Math.min(10, (weak[ch] || 0) * 3); const practiced 
-          = store.perKeyHits[ch] || 0; if (practiced < 5) weight += 3;
-        } for (let i = 0; i < weight; i++) pool.push(ch);
-      } return pool[Math.floor(Math.random() * pool.length)];
-    } function updateStats() {
-      const total = hits + wrong + misses; const acc = total === 0 ? 100 : Math.max(0, Math.round((hits / total) * 100)); 
-      scoreEl.textContent = score; bestEl.textContent = Math.max(store.bestScore || 0, score); streakEl.textContent = streak; 
-      accuracyEl.textContent = acc + "%"; missesEl.textContent = misses; levelEl.textContent = level; const allWeak = { 
-      ...store.weakKeys }; for (const [k, v] of Object.entries(weak)) allWeak[k] = (allWeak[k] || 0) + v; const sortedWeak = 
-      Object.entries(allWeak).sort((a, b) => b[1] - a[1]).slice(0, 10); weakKeysEl.textContent = sortedWeak.length
-        ? sortedWeak.map(([k, v]) => `${k}: ${v}`).join("  ") : "No mistakes yet.";
-    } function renderToday() {
-      const d = store.days[todayKey()]; if (!d) {
-        todayStatsEl.textContent = "No saved practice yet."; return;
-      } const total = d.hits + d.wrong + d.misses; const acc = total ? Math.round((d.hits / total) * 100) : 100; 
-      todayStatsEl.innerHTML = `
-        Hits: <b>${d.hits}</b><br> Wrong: <b>${d.wrong}</b><br> Misses: <b>${d.misses}</b><br> Best score today: 
-        <b>${d.score}</b><br> Accuracy today: <b>${acc}%</b>
-      `;
-    } function showToast(text) {
-      toast.textContent = text; toast.classList.add("show"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() 
-      => toast.classList.remove("show"), 650);
-    } function showCombo() {
-      if (streak < 5) return; comboEl.textContent = `combo x${streak}`; comboEl.classList.add("show"); 
-      clearTimeout(showCombo.timer); showCombo.timer = setTimeout(() => comboEl.classList.remove("show"), 500);
-    } function buildKeyboard(targetEl, focus = false) {
-      targetEl.innerHTML = ""; rows.forEach((row, idx) => {
-        const r = document.createElement("div"); r.className = focus ? `focus-row r${idx + 1}` : `row r${idx + 1}`; 
-        row.forEach(k => {
-          const id = KEY_FINGER[k]; const finger = FINGER[id]; const key = document.createElement("div"); key.className = 
-          `${focus ? "fk" : "k"} ${k === "space" ? (focus ? "space" : "wide") : ""} ${finger ? finger.cls : ""}`; 
-          key.dataset.key = k; key.dataset.fingerShort = finger ? finger.short : ""; key.textContent = k === "space" ? 
-          "space" : k; r.appendChild(key);
-        }); targetEl.appendChild(r);
-      });
-    } function buildLegend() {
-      legendEl.innerHTML = ""; Object.values(FINGER).forEach(f => {
-        const item = document.createElement("div"); item.className = "legend-item"; item.style.color = f.color; 
-        item.innerHTML = `<span class="dot"></span><span>${f.short} ${f.name}</span>`; legendEl.appendChild(item);
-      });
-    } function setCurrentKey(k) {
-      currentKeyEl.textContent = k || "-"; document.querySelectorAll(".k").forEach(el => {
-        el.classList.toggle("active", el.dataset.key === k);
-      }); fingerHintEl.innerHTML = ""; const id = KEY_FINGER[k]; const finger = FINGER[id]; const fingerName = finger ? 
-      finger.name : "Use nearest comfortable finger"; [
-        ["Key", k || "-"], ["Finger", fingerName], ["Rare/hard", HARD_KEYS.includes(k) ? "yes, boosted" : "normal"], 
-        ["Return", "Back to home row"], ["Focus", "correct finger > speed"]
-      ].forEach(([a, b]) => {
-        const line = document.createElement("div"); line.className = "finger-line"; line.innerHTML = 
-        `<span>${a}</span><span>${b}</span>`; fingerHintEl.appendChild(line);
-      });
-    } function spawnKey() {
-      const char = weightedRandom(MODES[modeSelect.value]); const el = document.createElement("div"); el.className = 
-      "falling-key"; if (HARD_KEYS.includes(char)) el.classList.add("hard"); el.textContent = char; el.dataset.key = char; 
-      const maxX = Math.max(0, stage.clientWidth - 64); const x = 20 + Math.random() * Math.max(0, maxX - 40); el.style.left 
-      = x + "px"; el.style.top = "-60px"; stage.appendChild(el); keys.push({
-        char, el, y: -60, speed: speed + Math.random() * 0.45
-      }); if (keys.length === 1) setCurrentKey(char);
-    } function removeKey(obj, cls) {
-      obj.el.classList.add(cls); setTimeout(() => obj.el.remove(), 220); keys = keys.filter(k => k !== obj); 
-      setCurrentKey(keys[0]?.char || "-");
-    } function handleHit(key) {
-      if (focusOpen) {
-        handleFocusKey(key); return;
-      } if (!running || paused) return; if (!keys.length) return; const index = keys.findIndex(k => k.char === key); if 
-      (index >= 0) {
-        const obj = keys[index]; hits++; streak++; score += 10 + Math.min(streak, 30) + (HARD_KEYS.includes(key) ? 5 : 0); 
-        removeKey(obj, "hit"); flashKeyboard(key, "good"); showCombo(); savePracticeEvent("hit", key); if (streak > 0 && 
-        streak % 12 === 0) {
-          level++; speed += 0.18; spawnEvery = Math.max(520, spawnEvery - 90); showToast("Level up");
-        } if (streak > 0 && streak % 25 === 0) {
-          score += 100; showToast("Clean streak bonus +100");
-        }
-      } else {
-        wrong++; streak = 0; weak[key] = (weak[key] || 0) + 1; flashKeyboard(key, "bad"); savePracticeEvent("wrong", key); 
-        showToast("Wrong key: " + key);
-      } updateStats();
-    } function flashKeyboard(key, cls) {
-      const el = document.querySelector(`.k[data-key="${CSS.escape(key)}"]`); if (!el) return; el.classList.add(cls); 
-      setTimeout(() => el.classList.remove(cls), 180);
-    } function loop(now) {
-      const dt = Math.min(32, now - lastTime); lastTime = now; if (running && !paused) {
-        if (now - lastSpawn > spawnEvery) {
-          spawnKey(); lastSpawn = now;
-        } const groundY = stage.clientHeight - 80; for (const obj of [...keys]) {
-          obj.y += obj.speed * dt * 0.06; obj.el.style.top = obj.y + "px"; if (obj.y >= groundY) {
-            misses++; streak = 0; weak[obj.char] = (weak[obj.char] || 0) + 1; savePracticeEvent("miss", obj.char); 
-            removeKey(obj, "miss"); showToast("Missed: " + obj.char); updateStats();
-          }
-        }
-      } raf = requestAnimationFrame(loop);
-    } function startGame() {
-      if (!running) {
-        running = true; paused = false; centerMessage.style.display = "none"; lastSpawn = performance.now() - 9999; lastTime 
-        = performance.now();
-      } else {
-        paused = false; centerMessage.style.display = "none";
-      } saveStore();
-    } function pauseGame() {
-      if (!running) return; paused = !paused; centerMessage.style.display = paused ? "grid" : "none"; if (paused) {
-        centerMessage.innerHTML = `
-          <div class="message-card">
-            <strong>Paused</strong> <div class="small">Press Space or Pause to continue.</div>
+
+    <!-- Three-column layout -->
+    <div class="layout">
+
+      <!-- Left sidebar: controls -->
+      <aside class="sidebar" id="leftSidebar">
+        <div class="sb-inner">
+
+          <div class="sb-section">
+            <div class="sb-label">Mode</div>
+            <select id="mode">
+              <option value="home">Home row only</option>
+              <option value="letters" selected>All letters A–Z</option>
+              <option value="hard">Hard key drill</option>
+              <option value="code">Coder keys</option>
+              <option value="mixed">Mixed keys</option>
+            </select>
+            <label class="check">
+              <input type="checkbox" id="adaptive" checked />
+              <span>Adaptive — repeat weak keys more</span>
+            </label>
           </div>
-        `;
-      } saveStore();
-    } function resetGame() {
-      running = false; paused = false; keys.forEach(k => k.el.remove()); keys = []; score = 0; streak = 0; hits = 0; wrong = 
-      0; misses = 0; level = 1; speed = 1.15; spawnEvery = 1450; weak = {}; setCurrentKey("-"); updateStats(); 
-      centerMessage.style.display = "grid"; centerMessage.innerHTML = `
-        <div class="message-card">
-          <strong>Start with Practice Finger Map</strong> <div class="small">
-            It trains the keyboard map first. Falling game is for reaction after your fingers understand where to go.
+
+          <div class="sb-section">
+            <div class="sb-label">Practice</div>
+            <button class="btn-focus" id="openFocusBtn">Practice Finger Map</button>
+            <button class="btn-primary" id="startBtn">Start Game</button>
+            <div class="btn-pair">
+              <button id="pauseBtn">Pause</button>
+              <button id="resetBtn">Reset</button>
+            </div>
+            <button class="btn-ghost" id="clearStorageBtn">Clear saved stats</button>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-label">Shortcuts <span class="sb-note">(when not playing)</span></div>
+            <div class="shortcuts">
+              <div class="sc-row"><span>Finger map</span><kbd>F</kbd></div>
+              <div class="sc-row"><span>Start / Pause</span><kbd>Space</kbd></div>
+              <div class="sc-row"><span>Reset</span><kbd>R</kbd></div>
+              <div class="sc-row"><span>Reset (always)</span><kbd>Esc</kbd></div>
+            </div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-label">Best order</div>
+            <ol class="order-list">
+              <li>Practice Finger Map</li>
+              <li>Home row only</li>
+              <li>All letters</li>
+              <li>Hard key drill</li>
+              <li>Coder keys</li>
+            </ol>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Center: stage + keyboard -->
+      <div class="center">
+        <div class="stage-wrap">
+          <div id="stage">
+            <div class="toast" id="toast"></div>
+            <div class="combo" id="combo"></div>
+            <div class="center-message" id="centerMessage">
+              <div class="message-card">
+                <strong>Start with Practice Finger Map</strong>
+                <p>Press <kbd>F</kbd> — a key lights up, see which finger owns it, press it, return home.<br>
+                   During play, <kbd>F</kbd> and <kbd>R</kbd> type normally. Use <kbd>Space</kbd> to pause.</p>
+              </div>
+            </div>
+            <div class="ground"></div>
           </div>
         </div>
-      `; saveStore();
-    } function clearStorage() {
-      localStorage.removeItem(STORAGE_KEY); store = defaultStore(); weak = {}; modeSelect.value = "letters"; 
-      focusModeEl.value = "letters"; adaptiveEl.checked = true; resetGame(); renderToday(); showToast("Saved stats cleared");
-    } function nextFocusKey() {
-      const chars = MODES[focusModeEl.value] || MODES.letters; focusCurrent = weightedRandom(chars); const id = 
-      KEY_FINGER[focusCurrent]; const finger = FINGER[id]; focusBigKeyEl.textContent = focusCurrent; 
-      focusFingerEl.textContent = finger ? finger.name : "Nearest comfortable finger"; focusInstructionEl.textContent = 
-      HARD_KEYS.includes(focusCurrent)
-        ? "Hard key. Move slowly. Press it with the correct finger, then return home." : "Find the highlighted key. Press 
-        slowly. Return to home row.";
-      setCurrentKey(focusCurrent); updateFocusKeyboard(); saveStore();
-    } function updateFocusKeyboard(feedbackKey = "", feedbackClass = "") {
-      const id = KEY_FINGER[focusCurrent]; document.querySelectorAll(".fk").forEach(el => {
-        const k = el.dataset.key; const sameFinger = KEY_FINGER[k] === id; el.classList.toggle("target", k === focusCurrent); 
-        el.classList.toggle("same-finger", sameFinger && k !== focusCurrent); el.classList.remove("correct", "wrong");
-      }); if (feedbackKey && feedbackClass) {
-        const el = document.querySelector(`.fk[data-key="${CSS.escape(feedbackKey)}"]`); if (el) {
-          el.classList.add(feedbackClass); setTimeout(() => el.classList.remove(feedbackClass), 160);
-        }
-      } focusStreakEl.textContent = focusStreak; focusCorrectEl.textContent = focusCorrect; focusWrongEl.textContent = 
-      focusWrong;
-    } function openFocus() {
-      paused = true; focusOpen = true; focusLayer.classList.add("open"); buildKeyboard(focusKeyboardEl, true); 
-      nextFocusKey();
-    } function closeFocus() {
-      focusOpen = false; focusLayer.classList.remove("open"); setCurrentKey(keys[0]?.char || "-"); paused = false;
-    } function handleFocusKey(key) {
-      if (key === "space") return; if (key === focusCurrent) {
-        focusCorrect++; focusStreak++; hits++; streak++; score += 6 + Math.min(focusStreak, 20); savePracticeEvent("hit", 
-        key); updateFocusKeyboard(key, "correct"); setTimeout(nextFocusKey, 120);
-      } else {
-        focusWrong++; focusStreak = 0; wrong++; streak = 0; weak[key] = (weak[key] || 0) + 1; savePracticeEvent("wrong", 
-        key); updateFocusKeyboard(key, "wrong"); focusInstructionEl.textContent = "Wrong key. Look at the orange key. Do not 
-        rush.";
-      } updateStats();
-    } startBtn.addEventListener("click", startGame); pauseBtn.addEventListener("click", pauseGame); 
-    resetBtn.addEventListener("click", resetGame); clearStorageBtn.addEventListener("click", clearStorage); 
-    openFocusBtn.addEventListener("click", openFocus); closeFocusBtn.addEventListener("click", closeFocus); 
-    focusNextBtn.addEventListener("click", nextFocusKey); document.addEventListener("keydown", (e) => {
-      if (e.key === "Tab") {
-        e.preventDefault(); return;
-      } // Focus map shortcuts: keep hands on keyboard. if (focusOpen) {
-        if (e.key === "Escape") {
-          e.preventDefault(); closeFocus(); return;
-        } if (e.key === "Enter") {
-          e.preventDefault(); nextFocusKey(); return;
-        } // 1-6 changes practice drill while inside focus mode. const focusModes = ["home", "letters", "hard", "left", 
-        "right", "code"]; if (/^[1-6]$/.test(e.key)) {
-          e.preventDefault(); focusModeEl.value = focusModes[Number(e.key) - 1]; nextFocusKey(); return;
-        } const key = normalizeKey(e.key); if (key.length === 1) {
-          e.preventDefault(); handleFocusKey(key);
-        } return;
-      } // Global shortcuts outside focus mode. if (e.key === "Escape") {
-        resetGame(); return;
-      } if (e.key.toLowerCase() === "f") {
-        e.preventDefault(); openFocus(); return;
-      } if (e.key.toLowerCase() === "r") {
-        e.preventDefault(); resetGame(); return;
-      } if (e.code === "Space") {
-        e.preventDefault(); if (!running || paused) startGame(); else pauseGame(); return;
-      } const key = normalizeKey(e.key); if (key.length === 1) {
-        e.preventDefault(); handleHit(key);
-      }
-    }); modeSelect.addEventListener("change", () => {
-      resetGame(); showToast("Mode changed");
-    }); focusModeEl.addEventListener("change", nextFocusKey); adaptiveEl.addEventListener("change", () => {
-      saveStore(); showToast(adaptiveEl.checked ? "Adaptive on" : "Adaptive off");
-    }); modeSelect.value = store.settings?.mode || "letters"; focusModeEl.value = store.settings?.focusMode || "letters"; 
-    adaptiveEl.checked = store.settings?.adaptive !== false; buildKeyboard(keyboardEl, false); buildLegend(); renderToday(); 
-    setCurrentKey("-"); updateStats(); raf = requestAnimationFrame(loop);
-  </script> </body> </html>
+
+        <div class="kbd-section">
+          <div class="kbd-label">Current key: <b id="currentKey">—</b></div>
+          <div class="keyboard" id="keyboard"></div>
+        </div>
+      </div>
+
+      <!-- Right sidebar: stats -->
+      <aside class="sidebar sidebar-right" id="rightSidebar">
+        <div class="sb-inner">
+
+          <div class="sb-section">
+            <div class="sb-label">Session</div>
+            <div class="stat-grid">
+              <div class="stat-cell"><div class="stat-n" id="score">0</div><div class="stat-k">score</div></div>
+              <div class="stat-cell"><div class="stat-n" id="best">0</div><div class="stat-k">best</div></div>
+              <div class="stat-cell"><div class="stat-n" id="streak">0</div><div class="stat-k">streak</div></div>
+              <div class="stat-cell"><div class="stat-n" id="accuracy">100%</div><div class="stat-k">accuracy</div></div>
+              <div class="stat-cell"><div class="stat-n" id="level">1</div><div class="stat-k">level</div></div>
+              <div class="stat-cell"><div class="stat-n" id="misses">0</div><div class="stat-k">misses</div></div>
+            </div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-label">Finger hint</div>
+            <div class="finger-map" id="fingerHint"></div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-label">Weak keys</div>
+            <div class="sb-muted" id="weakKeys">No mistakes yet.</div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-label">Today</div>
+            <div class="sb-muted" id="todayStats">No saved practice yet.</div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-label">Finger legend</div>
+            <div class="legend" id="legend"></div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-label">Why focus mode?</div>
+            <p class="sb-muted">Falling mode trains reaction. Focus mode trains the keyboard map. Map-first breaks old habits faster.</p>
+          </div>
+
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Focus / Finger Map overlay -->
+  <section class="focus-layer" id="focusLayer">
+    <div class="focus-top">
+      <div class="focus-title">
+        <strong>Practice Finger Map</strong>
+        <span>No falling. No rush. See key → know finger → press → return home. Enter skips, 1–6 changes drill.</span>
+      </div>
+      <div class="focus-actions">
+        <select id="focusMode">
+          <option value="home">Home row</option>
+          <option value="letters" selected>All letters</option>
+          <option value="hard">Hard keys</option>
+          <option value="left">Left hand</option>
+          <option value="right">Right hand</option>
+          <option value="code">Coder keys</option>
+        </select>
+        <button id="focusNextBtn" title="Shortcut: Enter">Skip Key</button>
+        <button id="closeFocusBtn" title="Shortcut: Esc">Close</button>
+      </div>
+    </div>
+    <div class="focus-main">
+      <div class="focus-callout">
+        <div class="big-key" id="focusBigKey">a</div>
+        <div class="finger" id="focusFinger">Left pinky</div>
+        <div class="instruction" id="focusInstruction">Find the highlighted key. Press slowly. Return to home row.</div>
+      </div>
+      <div class="focus-keyboard-wrap">
+        <div class="focus-keyboard" id="focusKeyboard"></div>
+      </div>
+    </div>
+    <div class="focus-bottom">
+      <div>Streak: <b id="focusStreak">0</b> · Correct: <b id="focusCorrect">0</b> · Wrong: <b id="focusWrong">0</b></div>
+      <div>Focus shortcuts: <b>Enter</b> skip · <b>1–6</b> change drill · <b>Esc</b> close</div>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
